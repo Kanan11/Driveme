@@ -1,11 +1,12 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
-// Read the database password from the environment variables
-const dbPassword = process.env.DB_PASSWORD;
+// Read from the environment variables
 const dbUser = process.env.DB_USER;
 const host = process.env.DB_HOST;
 const dbName = process.env.DB_NAME;
+const dbPassword = process.env.DB_PASSWORD;
+const port = process.env.DB_PORT
 
 // Create a connection pool for PostgreSQL
 const pool = new Pool({
@@ -13,7 +14,7 @@ const pool = new Pool({
   host: host,
   database: dbName,
   password: dbPassword,
-  port: 5432,
+  port: port,
 });
 
 // Create the customer table

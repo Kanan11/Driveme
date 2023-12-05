@@ -1,5 +1,5 @@
 const express = require('express');
-const { initializeDatabase } = require('./db'); // Adjust the path based on your file structure
+const { initializeDatabase } = require('./db');
 
 const app = express();
 const port = 3000;
