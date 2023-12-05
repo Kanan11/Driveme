@@ -42,6 +42,12 @@ psql -U admin -h 127.0.0.1 -d driveme
 
 \dt
 
+# Export (Create) backup
+pg_dump -U admin -h localhost -d driveme -Fc -f driveme_backup.dump
+
+# Import (Restore) Database
+pg_restore -U admin -h localhost -d driveme -Fc -j 4 -v driveme_backup.dump
+
 
 server/
 |-- app.js          // Entry point of the Node.js application

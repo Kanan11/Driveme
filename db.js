@@ -1,11 +1,18 @@
 const { Pool } = require('pg');
+require('dotenv').config();
+
+// Read the database password from the environment variables
+const dbPassword = process.env.DB_PASSWORD;
+const dbUser = process.env.DB_USER;
+const host = process.env.DB_HOST;
+const dbName = process.env.DB_NAME;
 
 // Create a connection pool for PostgreSQL
 const pool = new Pool({
-  user: 'admin',
-  host: 'localhost',
-  database: 'driveme',
-  password: 'max',
+  user: dbUser,
+  host: host,
+  database: dbName,
+  password: dbPassword,
   port: 5432,
 });
 
@@ -53,8 +60,24 @@ const createOrdersTableQuery = `
   );
 `;
 
+const select = `
+    SELECT * FROM "user";
+`;
+
 // Function to initialize the database
 async function initializeDatabase() {
+  try {
+    await pool.query(select);
+    console.log('DB connected');
+  } catch (err) {
+    console.error('Error DB connection:', err);
+  } finally {
+    // Close the connection pool
+    pool.end();
+  }
+}
+
+async function creatTabeles() {
   try {
     await pool.query(createCustomerTableQuery);
     await pool.query(createUserTableQuery);
@@ -71,4 +94,4 @@ async function initializeDatabase() {
 }
 
 // Export the initializeDatabase function
-module.exports = { initializeDatabase };
+module.exports = { initializeDatabase, creatTabeles };
