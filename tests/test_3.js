@@ -17,19 +17,20 @@ const pool = new Pool({
   port: port,
 });
 
-// Test the orders table connection
-async function testOrdersTableConnection() {
+// Test the database connection
+async function testDatabaseConnection() {
   const client = await pool.connect();
 
   try {
     // Perform a simple query
-    const result = await client.query('SELECT $1::text as message', ['Hello, Orders Table!']);
+    const result = await client.query('SELECT $1::text as message', ['Hello, Database!']);
     console.log('Query Result:', result.rows[0].message);
 
-    // Generate and insert 5 random orders
-    await generateAndInsertRandomOrders(5, client);
+    // Generate and insert 5 random users
+    await generateAndInsertRandomUsers(5, client);
+
   } catch (error) {
-    console.error('Error testing orders table connection:', error);
+    console.error('Error testing database connection:', error);
   } finally {
     // Release the client back to the pool
     client.release();
@@ -38,8 +39,8 @@ async function testOrdersTableConnection() {
   }
 }
 
-async function generateAndInsertRandomOrders(numOrders, client) {
-  const insertQuery = generateOrderInsertQuery(generateRandomOrders(numOrders));
+async function generateAndInsertRandomUsers(numUsers, client) {
+  const insertQuery = generateInsertQuery(generateRandomUsers(numUsers));
 
   try {
     await client.query('BEGIN'); // Start a transaction
@@ -47,58 +48,56 @@ async function generateAndInsertRandomOrders(numOrders, client) {
     await client.query(insertQuery); // Execute the insert query
 
     await client.query('COMMIT'); // Commit the transaction
-    console.log(`${numOrders} random orders inserted successfully.`);
+    console.log(`${numUsers} random users inserted successfully.`);
   } catch (error) {
     await client.query('ROLLBACK'); // Rollback the transaction in case of an error
-    console.error('Error inserting random orders:', error);
+    console.error('Error inserting random users:', error);
   }
 }
 
-function generateOrderInsertQuery(orders) {
-  const columns = Object.keys(orders[0]).join(', ');
-  const values = orders.map(order =>
-    '(' + Object.values(order).map(value => typeof value === 'string' ? `'${value}'` : value).join(', ') + ')'
+function generateInsertQuery(users) {
+  const columns = Object.keys(users[0]).join(', ');
+  const values = users.map(user =>
+    '(' + Object.values(user).map(value => typeof value === 'string' ? `'${value}'` : value).join(', ') + ')'
   ).join(', ');
 
-  const insertQuery = `INSERT INTO orders (${columns}) VALUES ${values}`;
-  console.log('Generated Insert Query:', insertQuery); // Log the insert query
-  return insertQuery;
+  return `INSERT INTO "user" (${columns}) VALUES ${values}`;
 }
 
-function generateRandomOrders(numOrders) {
-  const randomOrders = [];
-  for (let i = 0; i < numOrders; i++) {
-    randomOrders.push({
-      user_id: getRandomInteger(1, 5), // Assuming have users with IDs 1 to 5
+function generateRandomUsers(numUsers) {
+  const randomUsers = [];
+  for (let i = 0; i < numUsers; i++) {
+    randomUsers.push({
       user_name: getRandomString(),
+      user_surname: getRandomString(),
       user_tel_number: getRandomPhoneNumber(),
-      pickup_street: getRandomString(),
-      pickup_zip: getRandomString(),
-      pickup_city: getRandomString(),
-      pickup_time: getRandomTime(),
-      pickup_date: getRandomDate(),
-      destination_street: getRandomString(),
-      destination_zip: getRandomString(),
-      destination_city: getRandomString(),
+      user_mail: getRandomEmail(),
+      user_status: getRandomBoolean(),
       car_number: getRandomString(),
       car_color: getRandomString(),
       car_model: getRandomString(),
-      price: getRandomDecimal(10, 1000),
-      payment_status: getRandomBoolean(),
-      order_status: getRandomString(),
+      car_status: getRandomBoolean(),
       meta_info: getRandomString(),
+      history: getRandomString(),
+      reg_time: getRandomTime(),
+      reg_date: getRandomDate(),
+      avatar: getRandomAvatar(),
+      rate: getRandomInteger(1, 5),
     });
   }
-  return randomOrders;
+  return randomUsers;
 }
 
-// Helper functions (similar to the previous files)
 function getRandomString() {
   return Math.random().toString(36).substring(7);
 }
 
 function getRandomPhoneNumber() {
   return Math.floor(Math.random() * 9000000000) + 1000000000;
+}
+
+function getRandomEmail() {
+  return `${getRandomString()}@example.com`;
 }
 
 function getRandomBoolean() {
@@ -116,13 +115,13 @@ function getRandomDate() {
   return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
 }
 
-function getRandomDecimal(min, max) {
-  return (Math.random() * (max - min) + min).toFixed(2);
+function getRandomAvatar() {
+  return '\\x' + Buffer.from(getRandomString()).toString('hex');
 }
 
 function getRandomInteger(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-// Call the test function for the orders table
-testOrdersTableConnection();
+// Call the test function
+testDatabaseConnection();
