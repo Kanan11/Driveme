@@ -17,49 +17,81 @@ const pool = new Pool({
   port: port,
 });
 
-// Create the customer table
-const createCustomerTableQuery = `
-  CREATE TABLE IF NOT EXISTS "customer" (
+// Create the user table
+const createUserTableQuery = `
+  CREATE TABLE "user" (
     id SERIAL PRIMARY KEY,
-    customer_name VARCHAR(50) NOT NULL,
-    meta JSONB NOT NULL,
-    user_id INTEGER REFERENCES "user"(id) NOT NULL
+    user_name VARCHAR(255),
+    user_surname VARCHAR(255),
+    user_tel_number VARCHAR(20),
+    user_mail VARCHAR(255),
+    user_status BOOLEAN,
+    car_number VARCHAR(20),
+    car_color VARCHAR(50),
+    car_model VARCHAR(50),
+    car_status BOOLEAN,
+    meta_info TEXT,
+    history TEXT,
+    reg_time TIME,
+    reg_date DATE,
+    avatar BYTEA,
+    rate INTEGER CHECK (rate >= 1 AND rate <= 5)
   );
 `;
 
-// Create the user table
-const createUserTableQuery = `
-  CREATE TABLE IF NOT EXISTS "user" (
+const createDriverTableQuery = `
+  CREATE TABLE driver (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(50) NOT NULL,
-    surname VARCHAR(50) NOT NULL,
-    telefon VARCHAR(50) NOT NULL,
-    email VARCHAR(100) NOT NULL,
-    customer_id INTEGER,
-    meta JSONB NOT NULL
-);
-`;
-
-// Create the car table
-const createCarTableQuery = `
-  CREATE TABLE IF NOT EXISTS "car" (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES "user"(id) NOT NULL,
-    number VARCHAR(50) NOT NULL,
-    model VARCHAR(50) NOT NULL,
-    color VARCHAR(50) NOT NULL,
-    meta JSONB NOT NULL
+    driver_name VARCHAR(255),
+    driver_surname VARCHAR(255),
+    driver_tel_number VARCHAR(20),
+    driver_mail VARCHAR(255),
+    driver_status BOOLEAN,
+    driver_pers_nr VARCHAR(20),
+    driver_state BOOLEAN,
+    meta_info TEXT,
+    history TEXT,
+    reg_time TIME,
+    reg_date DATE,
+    avatar BYTEA,
+    rate INTEGER CHECK (rate >= 1 AND rate <= 5)
   );
 `;
 
 // Create the orders table
 const createOrdersTableQuery = `
-  CREATE TABLE IF NOT EXISTS "orders" (
+  CREATE TABLE orders (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES "user"(id) NOT NULL,
-    meta JSONB NOT NULL
+    user_id INTEGER REFERENCES "user"(id),
+    user_name VARCHAR(255),
+    user_tel_number VARCHAR(20),
+    pickup_street VARCHAR(255),
+    pickup_zip VARCHAR(20),
+    pickup_city VARCHAR(255),
+    pickup_time TIME,
+    pickup_date DATE,
+    destination_street VARCHAR(255),
+    destination_zip VARCHAR(20),
+    destination_city VARCHAR(255),
+    car_number VARCHAR(20),
+    car_color VARCHAR(50),
+    car_model VARCHAR(50),
+    price DECIMAL(10, 2),
+    payment_status BOOLEAN,
+    order_status VARCHAR(50),
+    meta_info TEXT
   );
 `;
+
+const createHistoryTableQuery = `
+  CREATE TABLE history (
+    id SERIAL PRIMARY KEY,
+    order_id INTEGER REFERENCES orders(id),
+    time TIME,
+    date DATE,
+    meta_info TEXT
+  );
+`
 
 const select = `
     SELECT * FROM "user";
@@ -80,11 +112,10 @@ async function initializeDatabase() {
 
 async function creatTabeles() {
   try {
-    await pool.query(createCustomerTableQuery);
-    await pool.query(createUserTableQuery);
-    await pool.query(createCarTableQuery);
-    await pool.query(createOrdersTableQuery);
-
+    // await pool.query(createUserTableQuery);
+    // await pool.query(createDriverTableQuery);
+    // await pool.query(createOrdersTableQuery);
+    await pool.query(createHistoryTableQuery);
     console.log('Tables created successfully');
   } catch (err) {
     console.error('Error creating tables:', err);
