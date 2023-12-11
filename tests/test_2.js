@@ -1,3 +1,4 @@
+// test add Drivers to DB
 const { Pool } = require('pg');
 require('dotenv').config();
 
@@ -60,7 +61,7 @@ function generateDriverInsertQuery(drivers) {
     '(' + Object.values(driver).map(value => typeof value === 'string' ? `'${value}'` : value).join(', ') + ')'
   ).join(', ');
 
-  return `INSERT INTO driver (${columns}) VALUES ${values}`;
+  return `INSERT INTO drivers (${columns}) VALUES ${values}`;
 }
 
 function generateRandomDrivers(numDrivers) {
@@ -74,6 +75,7 @@ function generateRandomDrivers(numDrivers) {
       driver_status: getRandomBoolean(),
       driver_pers_nr: getRandomString(),
       driver_state: getRandomBoolean(),
+      driver_license: getRandomAvatar(),
       meta_info: getRandomString(),
       history: getRandomString(),
       reg_time: getRandomTime(),

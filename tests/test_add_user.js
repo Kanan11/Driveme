@@ -1,3 +1,4 @@
+// test add User to DB
 const { Pool } = require('pg');
 require('dotenv').config();
 

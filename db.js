@@ -19,7 +19,7 @@ const pool = new Pool({
 
 // Create the user table
 const createUserTableQuery = `
-  CREATE TABLE IF NOT EXISTS "user" (
+  CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     user_name VARCHAR(255),
     user_surname VARCHAR(255),
@@ -49,6 +49,7 @@ const createDriverTableQuery = `
     driver_status BOOLEAN,
     driver_pers_nr VARCHAR(20),
     driver_state BOOLEAN,
+    driver_license BYTEA,
     meta_info TEXT,
     history TEXT,
     reg_time TIME,
@@ -62,7 +63,10 @@ const createDriverTableQuery = `
 const createOrdersTableQuery = `
   CREATE TABLE IF NOT EXISTS orders (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES "user"(id),
+    user_id INTEGER REFERENCES users(id),
+    driver_id INTEGER REFERENCES driver(id),
+    driver_name VARCHAR(255),
+    driver_tel_number VARCHAR(20),
     user_name VARCHAR(255),
     user_tel_number VARCHAR(20),
     pickup_street VARCHAR(255),
@@ -77,7 +81,9 @@ const createOrdersTableQuery = `
     car_color VARCHAR(50),
     car_model VARCHAR(50),
     price DECIMAL(10, 2),
-    payment_status BOOLEAN,
+    paid BOOLEAN,
+    payment_status VARCHAR(50),
+    payment_method VARCHAR(50),
     order_status VARCHAR(50),
     meta_info TEXT
   );

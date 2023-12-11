@@ -92,7 +92,7 @@ async function testOrdersTableConnection() {
 
   try {
     // Perform a simple query
-    const result = await client.query('SELECT $1::text as message', ['Hello, Orders Table!']);
+    const result = await client.query('SELECT $1::text as message', ['Hello, Notification Table!']);
     console.log('Query Result:', result.rows[0].message);
 
     await client.query('BEGIN'); // Start a transaction

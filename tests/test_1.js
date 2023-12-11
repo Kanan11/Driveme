@@ -61,7 +61,7 @@ function generateInsertQuery(users) {
     '(' + Object.values(user).map(value => typeof value === 'string' ? `'${value}'` : value).join(', ') + ')'
   ).join(', ');
 
-  return `INSERT INTO "user" (${columns}) VALUES ${values}`;
+  return `INSERT INTO users (${columns}) VALUES ${values}`;
 }
 
 function generateRandomUsers(numUsers) {
