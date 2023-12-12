@@ -87,6 +87,25 @@ function generateRandomDrivers(numDrivers) {
   return randomDrivers;
 }
 
+const drivers = [
+  {
+      driver_name: 'John',
+      driver_surname: 'Doe',
+      driver_tel_number: '1234567890',
+      driver_mail: 'john.doe@example.com',
+      driver_status: true,
+      driver_pers_nr: '123ABC456',
+      driver_state: 'Active',
+      driver_license: Buffer.from('0123456789ABCDEF', 'hex'),
+      meta_info: 'Some metadata',
+      history: 'Driving history',
+      reg_time: '12:34:56',
+      reg_date: '2023-01-01',
+      avatar: Buffer.from('0123456789ABCDEF', 'hex'),
+      rate: 4,
+  }
+];
+
 function getRandomString() {
   return Math.random().toString(36).substring(7);
 }

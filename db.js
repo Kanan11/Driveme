@@ -40,7 +40,7 @@ const createUserTableQuery = `
 `;
 
 const createDriverTableQuery = `
-  CREATE TABLE IF NOT EXISTS driver (
+  CREATE TABLE IF NOT EXISTS drivers (
     id SERIAL PRIMARY KEY,
     driver_name VARCHAR(255),
     driver_surname VARCHAR(255),
@@ -48,7 +48,7 @@ const createDriverTableQuery = `
     driver_mail VARCHAR(255),
     driver_status BOOLEAN,
     driver_pers_nr VARCHAR(20),
-    driver_state BOOLEAN,
+    driver_state VARCHAR(50),
     driver_license BYTEA,
     meta_info TEXT,
     history TEXT,
@@ -64,7 +64,7 @@ const createOrdersTableQuery = `
   CREATE TABLE IF NOT EXISTS orders (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id),
-    driver_id INTEGER REFERENCES driver(id),
+    driver_id INTEGER REFERENCES driver(id) NULL,
     driver_name VARCHAR(255),
     driver_tel_number VARCHAR(20),
     user_name VARCHAR(255),
