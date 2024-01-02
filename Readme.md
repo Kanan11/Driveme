@@ -85,6 +85,9 @@ client/
 |-- ...other files
 
 
+ALTER TABLE public.orders ADD driver_id int NULL;
+
+
 
 
 

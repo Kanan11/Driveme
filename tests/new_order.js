@@ -61,11 +61,11 @@ async function testOrdersTableConnection() {
         console.log('Query Result:', result.rows[0].message);
         const generateRandomId = () => Math.floor(Math.random() * 1000);
         const order = {
-          id: generateRandomId(),
-          user_id: 1,
+          // id: generateRandomId(),
+          user_id: 2,
           driver_id: null,
-          driver_name: 'Ivan',
-          driver_tel_number: 'Smirnov',
+          // driver_name: 'Ivan',
+          // driver_tel_number: 'Smirnov',
           user_name: 'Carl',
           user_tel_number: '0707070707',
           pickup_street: 'Vasagatan 5',

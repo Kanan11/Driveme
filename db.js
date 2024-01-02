@@ -64,7 +64,7 @@ const createOrdersTableQuery = `
   CREATE TABLE IF NOT EXISTS orders (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id),
-    driver_id INTEGER REFERENCES driver(id) NULL,
+    driver_id INTEGER REFERENCES drivers(id) NULL,
     driver_name VARCHAR(255),
     driver_tel_number VARCHAR(20),
     user_name VARCHAR(255),
@@ -85,7 +85,8 @@ const createOrdersTableQuery = `
     payment_status VARCHAR(50),
     payment_method VARCHAR(50),
     order_status VARCHAR(50),
-    meta_info TEXT
+    meta_info TEXT,
+    FOREIGN KEY (user_id) REFERENCES users(id)
   );
 `;
 
@@ -172,39 +173,118 @@ const notifyDrivers = `
 
 
 
-const select = `
-    SELECT * FROM "user";
+// const select = `
+//     SELECT * FROM "user";
+// `;
+
+// // Function to initialize the database
+// async function initializeDatabase() {
+//   try {
+//     await pool.query(select);
+//     console.log('DB connected');
+//   } catch (err) {
+//     console.error('Error DB connection:', err);
+//   } finally {
+//     // Close the connection pool
+//     // pool.end();
+//   }
+// }
+
+
+//-------- small get user func ----------
+let user;
+const user_id = 11;
+const selectUserQuery = `
+  SELECT * FROM users WHERE id = ${user_id};
 `;
 
-// Function to initialize the database
-async function initializeDatabase() {
+async function getUser() {
   try {
-    await pool.query(select);
-    console.log('DB connected');
+    const response = await pool.query(selectUserQuery);
+    user = response.rows[0];
+    // console.log(user);
   } catch (err) {
     console.error('Error DB connection:', err);
   } finally {
     // Close the connection pool
     pool.end();
   }
-}
+};
+
+// Use an async function to await the asynchronous call
+(async () => {
+  await getUser();
+  console.log('user--->>', user);
+})();
+//-------- END ----------
+
+
+
+const orderData = {
+  user_id: 6,
+  driver_id: null,
+  // driver_name: 'Ivan',
+  // driver_tel_number: 'Smirnov',
+  // user_name: user.user_name;
+  // user_tel_number: user_tel_number:,
+  pickup_street: 'Vasagatan 5',
+  pickup_zip: '415555',
+  pickup_city: 'Göteborg',
+  pickup_time: '15:30:00',
+  pickup_date: '2023-12-26',
+  destination_street: '789 Pine St',
+  destination_zip: '87654',
+  destination_city: 'Cityburg',
+  // car_number: user.car_number,
+  // car_color: user.car_color,
+  // car_model: user.car_model,
+  price: 200.00,
+  // paid: true,
+  payment_status: true,
+  payment_method: 'Swish',
+  order_status: 'Pending',
+  meta_info: 'More details'
+};
+
+const columns = Object.keys(orderData).join(', ');
+const values = Object.values(orderData).map(value => {
+  if (value === null) {
+    return 'NULL';
+  } else if (typeof value === 'string') {
+    return `'${value.replace(/'/g, "''")}'`;
+  } else {
+    return value;
+  }
+}).join(', ');
+
+const createNewOrder = `
+  INSERT INTO orders (
+    ${columns}
+    ) VALUES (
+      ${values}
+      ) RETURNING id, driver_id, user_id, driver_name, driver_tel_number, user_name, user_tel_number, pickup_street, pickup_zip, pickup_city, pickup_time, pickup_date, destination_street, destination_zip, destination_city, car_number, car_color, car_model, price, paid, payment_status, payment_method, order_status, meta_info;
+`;
+
+// console.log(createNewOrder)
+
 
 async function creatTabeles() {
   try {
-    await pool.query(createUserTableQuery);
-    await pool.query(createDriverTableQuery);
-    await pool.query(createOrdersTableQuery);
-    await pool.query(createHistoryTableQuery);
-    await pool.query(createNotificationTable);
-    await pool.query(notifyDrivers);
+    // await pool.query(createUserTableQuery);
+    // await pool.query(createDriverTableQuery);
+    // await pool.query(createOrdersTableQuery);
+    // await pool.query(createHistoryTableQuery);
+    // await pool.query(createNotificationTable);
+    // await pool.query(notifyDrivers);
+    await pool.query(createNewOrder);
     console.log('Tables created successfully');
   } catch (err) {
     console.error('Error creating tables:', err);
   } finally {
     // Close the connection pool
-    pool.end();
+    // pool.end();
   }
 }
 
 // Export the initializeDatabase function
-module.exports = { initializeDatabase, creatTabeles };
+module.exports = { getUser, creatTabeles };
