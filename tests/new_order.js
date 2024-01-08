@@ -18,7 +18,7 @@ const pool = new Pool({
 
 test.only('Create New Order then Notify all Drivers', async function createOrderDriverNotification(t) {
   const client = await pool.connect();
-
+  
   const order = {
     // id: generateRandomId(),
     user_id: 2,
@@ -48,9 +48,48 @@ test.only('Create New Order then Notify all Drivers', async function createOrder
   
   try {
     // Perform the actual database insertion
+    const driver = await pool.connect();  // Connect to the pool
+    
+    // Set up a listener for the 'new_notification' channel
+    driver.query('LISTEN new_notification');
+
+    // Listen for notifications and fetch new data
+    const notificationPromise = new Promise(resolve => {
+      driver.on('notification', async msg => {
+        try {
+          // console.log('Received notification:', msg);
+          // Handle the notification payload here
+          if (msg.channel === 'new_notification') {
+            // console.log('Setting notification:', msg.payload);
+            const notification = msg.payload;
+            t.pass(`Get new notification: ${notification}`);
+            const orderId = result.rows[0].id
+            const insertedOrder = await fetchOrderById(client, orderId);
+            await notifyDrivers(insertedOrder) // TODO
+            t.pass('Driver got notifactions')
+            resolve();  // Resolve the promise when the async operations are done
+          }
+        } catch (error) {
+          console.error('Error in notification event handler:', error);
+        }
+      });
+    });
+  
+  // TODO: Build query to send notification to all drivers about the new order by orderId
+    async function notifyDrivers(order) {
+      console.log('This order should be send to all drivers', order.id);
+    }
+
+
+    // Perform the actual database insertion
     const result = await createNewOrder(client, order);
-    
-    
+
+    // Timeout to handle a scenario where the 'notification' event is not emitted
+    const timeoutPromise = new Promise(resolve => setTimeout(resolve, 1500));
+
+    // Wait for either the 'notification' event or timeout
+    await Promise.race([notificationPromise, timeoutPromise]);
+  
     // Retrieve the inserted order for verification
     const insertedOrder = await fetchOrderById(client, result.rows[0].id);
     
@@ -59,8 +98,7 @@ test.only('Create New Order then Notify all Drivers', async function createOrder
     
     // Verify the order was inserted correctly
     t.equal(insertedOrder.id, result.rows[0].id, 'Order ID matches');
-    
-    console.log('Inserted Order ID:', result.rows[0].id);
+    // console.log('Inserted Order ID:', result.rows[0].id);
     
   } catch (error) {
     console.error('Test failed with an error:', error);
@@ -72,44 +110,18 @@ test.only('Create New Order then Notify all Drivers', async function createOrder
   async function createNewOrder(client, order) {
     try {
       const insertQuery = generateInsertQuery(order);
-      console.log('Generated Insert Query:', insertQuery);
-      
+      // console.log('Generated Insert Query:', insertQuery);
+      t.pass('New Order have been created')
+
       await client.query('BEGIN');
       const result = await client.query(insertQuery);
+
+      // Notify listeners about the new order
+      await client.query("NOTIFY new_notification, 'New notification added'");
+      t.pass('DB is listening of new notification')
+
       await client.query('COMMIT');
-      console.log('New order inserted successfully. Order ID:', result.rows[0].id);
-      
-      const driver = await pool.connect();
-      
-      // Assuming `driver` is available in the scope
-      if (driver) {
-        // Listen for the 'notification' event
-        const notificationPromise = new Promise(resolve => {
-          console.log('--------------')
-          driver.once('notification', async msg => {
-            try {
-              console.log('Received notification:', msg);
-              if (msg.channel === 'new_order' && msg.payload.orderId === result.rows[0].id) {
-                console.log('Setting notification:', msg.payload);
-                notification = msg.payload;
-                await fetchOpenOrders();  // Assuming fetchOpenOrders is asynchronous
-                orders.push(...await fetchOpenOrders());
-                console.log('Driver got notifications');
-                resolve(); // Resolve the promise when the async operations are done
-              }
-            } catch (error) {
-              console.error('Error in notification event handler:', error);
-              
-            }
-          });
-        });
-        
-        // Timeout to handle a scenario where the 'notification' event is not emitted
-        const timeoutPromise = new Promise(resolve => setTimeout(resolve, 5000));
-        
-        // Wait for either the 'notification' event or timeout
-        await Promise.race([notificationPromise, timeoutPromise]);
-      }
+      // console.log('New order inserted successfully. Order ID:', result.rows[0].id);
       return result;
     } catch (error) {
       await client.query('ROLLBACK');
@@ -135,7 +147,6 @@ test.only('Create New Order then Notify all Drivers', async function createOrder
   
   async function fetchOrderById(client, orderId) {
     const result = await client.query('SELECT * FROM orders WHERE id = $1', [orderId]);
-    const driverId = await client.query('SELECT * FROM orders WHERE driver_id IS null');
     return result.rows[0];
   }
 
