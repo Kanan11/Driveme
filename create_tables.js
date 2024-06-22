@@ -1,23 +1,22 @@
 const { Client } = require('pg');
 require('dotenv').config();
 
+// Read from the environment variables
+const dbUser = process.env.DB_USER;
+const host = process.env.DB_HOST;
+const dbName = process.env.DB_NAME;
+const dbPassword = process.env.DB_PASSWORD;
+const port = process.env.DB_PORT
+
 const client = new Client({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-  port: process.env.DB_PORT,
+  user: dbUser,
+  host: host,
+  database: dbName,
+  password: dbPassword,
+  port: port,
 });
 
-const initializeDatabase = async () => {
-  try {
-    await client.connect();
-    console.log('Database connected successfully');
-  } catch (err) {
-    console.error('Error connecting to database:', err);
-  }
-};
-
+client.connect();
 
 const createPartnerTableQuery = `
   CREATE TABLE IF NOT EXISTS partners (
@@ -200,22 +199,18 @@ const getDriverOrderHistoryQuery = `
 `;
 
 
+const queries = [
+  createPartnerBankTableQuery,
+  createPartnerAddressTableQuery,
+  createPartnerDriversTableQuery,
+  createPartnerCarsTableQuery,
+  createPartnerTableQuery,
+  createUsersTableQuery,
+  createOrdersTableQuery,
+  createPaymentsTableQuery,
+];
 
-const createTables = async () => {
-  const queries = [
-    // ваши запросы на создание таблиц
-    createPartnerBankTableQuery,
-    createPartnerAddressTableQuery,
-    createPartnerDriversTableQuery,
-    createPartnerCarsTableQuery,
-    createPartnerTableQuery,
-    createUsersTableQuery,
-    createOrdersTableQuery,
-    createPaymentsTableQuery,
-    createTransactionsTableQuery,
-    createPartnerPaymentsTableQuery,
-  ];
-
+(async () => {
   for (const query of queries) {
     try {
       await client.query(query);
@@ -224,6 +219,5 @@ const createTables = async () => {
       console.error('Error creating table', err);
     }
   }
-};
-
-module.exports = { client, initializeDatabase, createTables };
+  client.end();
+})();

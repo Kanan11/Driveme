@@ -168,9 +168,9 @@ test('Notify all drivers', async function notifyDrivers(t) {
 
     if (mappedOrder.id === id) {
       console.log('--------')
-    }
+    };
        
-    const removeOrder = await client.query('DELETE FROM orders WHERE id = $1', [mappedOrder.id]);
+    // const removeOrder = await client.query('DELETE FROM orders WHERE id = $1', [mappedOrder.id]);
 
     // TODO: Build query to send notification to all drivers about the new order by orderId
     t.pass('Drivers was notifyed');

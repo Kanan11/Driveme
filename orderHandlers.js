@@ -1,55 +1,14 @@
-const express = require('express');
 const { Client } = require('pg');
-const { initializeDatabase, createTables } = require('./db');
-const apiRoutes = require('./api');
-const http = require('http');
-const socketIo = require('socket.io');
-const dotenv = require('dotenv');
+const { io } = require('./app');
+require('dotenv').config();
 
-dotenv.config();
-
-const app = express();
-const server = http.createServer(app);
-const io = socketIo(server);
-
-const port = process.env.PORT || 3000;
-
-// Middleware для обработки JSON-запросов
-app.use(express.json());
-
-// Инициализация базы данных и создание таблиц
-initializeDatabase();
-createTables();
-
-// Подключение маршрутов API
-app.use('/api', apiRoutes);
-
-// Запуск сервера
-server.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+const client = new Client({
+  connectionString: process.env.DATABASE_URL
 });
 
-// Обработка событий Socket.IO
-io.on('connection', (socket) => {
-  console.log('New client connected');
-  socket.on('disconnect', () => {
-    console.log('Client disconnected');
-  });
-});
+client.connect();
 
-module.exports = { io };
-
-
-
-
-// this code should be moved from here
 const createOrder = async (orderData, paymentData) => {
-  const client = new Client({
-    connectionString: 'connection-string-here'
-  });
-
-  await client.connect();
-  
   try {
     await client.query('BEGIN');
     
@@ -78,48 +37,26 @@ const createOrder = async (orderData, paymentData) => {
   } catch (error) {
     await client.query('ROLLBACK');
     throw error;
-  } finally {
-    await client.end();
   }
 };
 
-
-// in case if driver accepted the order
 const assignDriverToOrder = async (orderId, driverId) => {
-  const client = new Client({
-    connectionString: 'connection-string-here'
-  });
-
-  await client.connect();
-
   try {
     const updateOrderQuery = `
       UPDATE Orders
       SET driver_id = $1, order_status = 'accepted'
       WHERE id = $2;
     `;
-    const values = [driverId, orderId];
-    await client.query(updateOrderQuery, values);
+    await client.query(updateOrderQuery, [driverId, orderId]);
 
     // Notify user and other drivers via Socket.IO
     io.emit('order_assigned', { orderId, driverId });
-
   } catch (error) {
     throw error;
-  } finally {
-    await client.end();
   }
 };
 
-
-// order is completed 
 const completeOrder = async (orderId, userId, partnerId, driverId, paymentAmount) => {
-  const client = new Client({
-    connectionString: 'your-connection-string-here'
-  });
-
-  await client.connect();
-
   try {
     await client.query('BEGIN');
 
@@ -138,26 +75,15 @@ const completeOrder = async (orderId, userId, partnerId, driverId, paymentAmount
 
     await client.query('COMMIT');
 
-    // notify user and driver that is order is done using by Socket.IO
+    // Notify user and driver via Socket.IO
     io.emit('order_completed', { orderId });
-
   } catch (error) {
     await client.query('ROLLBACK');
     throw error;
-  } finally {
-    await client.end();
   }
 };
 
-
-// weekly payment to partners 
 const processWeeklyPayments = async () => {
-  const client = new Client({
-    connectionString: 'connection-string-here'
-  });
-
-  await client.connect();
-
   try {
     await client.query('BEGIN');
 
@@ -183,20 +109,10 @@ const processWeeklyPayments = async () => {
   } catch (error) {
     await client.query('ROLLBACK');
     throw error;
-  } finally {
-    await client.end();
   }
 };
 
-
-// get history of orders
 const getOrderHistory = async (userId) => {
-  const client = new Client({
-    connectionString: 'connection-string-here'
-  });
-
-  await client.connect();
-
   try {
     const selectOrdersQuery = `
       SELECT * FROM Orders
@@ -207,7 +123,13 @@ const getOrderHistory = async (userId) => {
     return result.rows;
   } catch (error) {
     throw error;
-  } finally {
-    await client.end();
   }
+};
+
+module.exports = {
+  createOrder,
+  assignDriverToOrder,
+  completeOrder,
+  processWeeklyPayments,
+  getOrderHistory
 };
