@@ -184,5 +184,8 @@ module.exports = {
     getDriverTransactionHistoryQuery,
     getUserOrderHistoryQuery,
     getPartnerOrderHistoryQuery,
-    getDriverOrderHistoryQuery
+    getDriverOrderHistoryQuery,
+    createOrdersTableQuery,
+    createPartnerDriversTableQuery,
+    createPartnerCarsTableQuery
   };
