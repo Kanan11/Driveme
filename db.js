@@ -17,6 +17,7 @@ const {
   createTransactionsTableQuery,
   createPaymentsTableQuery,
   createUsersTableQuery,
+  createLocationsTableQuery
  } = require('./queries.js');
 
 const client = new Client({
@@ -59,6 +60,7 @@ const createTables = async () => {
     createPaymentsTableQuery,
     createPartnerTableQuery,
     createUsersTableQuery,
+    createLocationsTableQuery,
   ];
 
   for (const query of queries) {

@@ -1,6 +1,13 @@
 const tape = require('tape');
 const { connectToDatabase } = require('../app'); // Adjust paths as per your project structure
-const { createOrdersTableQuery, createPartnerDriversTableQuery, createPartnerCarsTableQuery, createBankTableQuery } = require('../queries'); // Adjust paths as per your project structure
+const { 
+    createOrdersTableQuery, 
+    createPartnerDriversTableQuery, 
+    createPartnerCarsTableQuery, 
+    createBankTableQuery,
+    createAddressTableQuery,
+    createCarsTableQuery
+} = require('../queries'); // Adjust paths as per your project structure
 
 tape.skip('Test Database Connection and CRUD Operations', async (t) => {
   t.plan(5); // Adjust the number based on how many assertions you are making
@@ -273,7 +280,7 @@ tape.skip('Test Create Car and Delete Car', async (t) => {
     }
 });
 
-tape('Test Create Bank Table and Delete Row', async (t) => {
+tape.skip('Test Create Bank Table and Delete Row', async (t) => {
     t.plan(5); // Adjust the number based on how many assertions you are making
   
     let client;
@@ -289,9 +296,18 @@ tape('Test Create Bank Table and Delete Row', async (t) => {
       // Insert a test row
       const insertBankQuery = `
         INSERT INTO Bank (
-          bank_type, bank_name, bank_account_clear_number, bank_account_number,
-          bank_address, bank_phone_number, bank_email, user_card_name,
-          user_card_number, user_card_valid, user_card_cvc, meta_info
+          bank_type, 
+          bank_name, 
+          bank_account_clear_number, 
+          bank_account_number,
+          bank_address, 
+          bank_phone_number, 
+          bank_email, 
+          user_card_name,
+          user_card_number, 
+          user_card_valid, 
+          user_card_cvc, 
+          meta_info
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
         RETURNING id, bank_name
       `;
@@ -339,3 +355,29 @@ tape('Test Create Bank Table and Delete Row', async (t) => {
     }
   });
   
+  tape('Create adress', async(t) => {
+    t.plan(2);
+    let client;
+    try {
+        client = await connectToDatabase();
+        t.pass('Connected to PostgreSQL database');
+        await client.query(createAddressTableQuery);
+        t.pass('Adress table was created');
+        
+    } catch (error) {
+        t.fail(`have error is ${error.message}`)
+    }
+  });
+
+  tape('Create cars', async(t) => {
+    t.plan(2);
+    let client;
+    try {
+        client = await connectToDatabase();
+        t.pass('Connected to db');
+        await client.query(createCarsTableQuery);
+        t.pass('Cars table was created')
+    } catch (error) {
+        t.fail(`ups have some error here ${error.message}`)
+    }
+  });

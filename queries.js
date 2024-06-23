@@ -14,15 +14,27 @@ const createPartnerTableQuery = `
     partner_drivers_id INTEGER REFERENCES Drivers(id) ON DELETE SET NULL, /* Foreign key relationship */
     partner_contract BYTEA, /* Save PDF file in DB */
     partner_options VARCHAR(255), /* Additional options that this partner can do (e.g., taxi, driver_service, and car_evolution) */
-    meta_info TEXT,
     reg_time TIME DEFAULT CURRENT_TIME,
     reg_date DATE DEFAULT CURRENT_DATE,
-    rate INTEGER CHECK (rate >= 1 AND rate <= 5)
+    rate INTEGER CHECK (rate >= 1 AND rate <= 5),
+    deposit VARCHAR(20),
+    meta_info TEXT
+  );
+`;
+
+const createLocationsTableQuery = `
+  CREATE TABLE IF NOT EXISTS locations (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES Users(id) ON DELETE CASCADE,
+    driver_id INTEGER REFERENCES Drivers(id) ON DELETE CASCADE,
+    latitude DOUBLE PRECISION NOT NULL,
+    longitude DOUBLE PRECISION NOT NULL,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   );
 `;
 
 const createBankTableQuery = `
-  CREATE TABLE IF NOT EXISTS Bank (
+  CREATE TABLE IF NOT EXISTS bank (
     id SERIAL PRIMARY KEY,
     bank_type VARCHAR(20) NOT NULL, -- Type of bank (card or account)
     bank_name VARCHAR(255) NOT NULL, -- Name of the bank
@@ -40,7 +52,7 @@ const createBankTableQuery = `
 `;
 
 const createAddressTableQuery = `
-  CREATE TABLE IF NOT EXISTS Address (
+  CREATE TABLE IF NOT EXISTS address (
     id SERIAL PRIMARY KEY,
     options VARCHAR(255), /* office or faktura adress */
     street VARCHAR(255) NOT NULL,
@@ -53,7 +65,7 @@ const createAddressTableQuery = `
 `;
 
 const createCarsTableQuery = `
-  CREATE TABLE IF NOT EXISTS Cars (
+  CREATE TABLE IF NOT EXISTS cars (
     id SERIAL PRIMARY KEY,
     car_status VARCHAR(20) NOT NULL DEFAULT 'inactive', /* active or not */
     car_type VARCHAR(20), /* taxi, privat or evacuator */
@@ -71,7 +83,7 @@ const createCarsTableQuery = `
 `;
 
 const createPartnerDriversTableQuery = `
-  CREATE TABLE IF NOT EXISTS Drivers (
+  CREATE TABLE IF NOT EXISTS drivers (
     id SERIAL PRIMARY KEY,
     driver_profile BYTEA,
     driver_name VARCHAR(255) NOT NULL,
@@ -83,13 +95,14 @@ const createPartnerDriversTableQuery = `
     driver_password VARCHAR(255) NOT NULL,
     driver_options VARCHAR(255) NOT NULL, /* taxi driver or simple driver */
     driver_status VARCHAR(255) NOT NULL DEFAULT 'inactive', /* active or not */
+    driver_location VARCHAR(255),
     rate INTEGER CHECK (rate >= 1 AND rate <= 5) DEFAULT 5,
     meta_info TEXT
   );
 `;
 
 const createUsersTableQuery = `
-  CREATE TABLE IF NOT EXISTS Users (
+  CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     user_name VARCHAR(255) NOT NULL,
     user_lastname VARCHAR(255) NOT NULL,
@@ -101,16 +114,17 @@ const createUsersTableQuery = `
     user_bank_id INTEGER REFERENCES Bank(id) ON DELETE SET NULL, /* Foreign key relationship */
     user_address_id INTEGER REFERENCES Address(id) ON DELETE SET NULL, /* Foreign key relationship */
     user_cars_id INTEGER REFERENCES Cars(id) ON DELETE SET NULL, /* Foreign key relationship */
-    meta_info TEXT,
+    user_location VARCHAR(255),
     reg_time TIME DEFAULT CURRENT_TIME,
     reg_date DATE DEFAULT CURRENT_DATE,
     profile BYTEA,
-    rate INTEGER CHECK (rate >= 1 AND rate <= 5) DEFAULT 5
+    rate INTEGER CHECK (rate >= 1 AND rate <= 5) DEFAULT 5,
+    meta_info TEXT
   );
 `;
 
 const createOrdersTableQuery = `
-  CREATE TABLE IF NOT EXISTS Orders (
+  CREATE TABLE IF NOT EXISTS orders (
     id SERIAL PRIMARY KEY,
     type_order VARCHAR(20) NOT NULL, /* taxi, only driver, evacuator */
     user_id INTEGER REFERENCES Users(id) ON DELETE CASCADE, /* which user was created this order */
@@ -126,12 +140,14 @@ const createOrdersTableQuery = `
     payment_mode VARCHAR(50) DEFAULT 'card', /* card, swish, cash */
     payment_status VARCHAR(50) DEFAULT 'pending', /* e.g., pending, completed, failed */
     order_status VARCHAR(50) DEFAULT 'pending', /* e.g., pending, accepted, in_progress, completed, cancelled */
+    order_status_detail VARCHAR(50) DEFAULT 'pending', /* driver is on way, driver is here, user is in the car, on way to destination, completed, */
+    message TEXT, -- Message provided by the user when creating the order
     meta_info TEXT
   );
 `;
 
 const createPaymentsTableQuery = `
-  CREATE TABLE IF NOT EXISTS Payments (
+  CREATE TABLE IF NOT EXISTS payments (
     id SERIAL PRIMARY KEY,
     order_id INTEGER REFERENCES Orders(id) ON DELETE CASCADE,
     user_id INTEGER REFERENCES Users(id) ON DELETE CASCADE,
@@ -144,7 +160,7 @@ const createPaymentsTableQuery = `
 `;
 
 const createTransactionsTableQuery = `
-  CREATE TABLE IF NOT EXISTS Transactions (
+  CREATE TABLE IF NOT EXISTS transactions (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES Users(id) ON DELETE CASCADE,
     partner_id INTEGER REFERENCES partners(id) ON DELETE SET NULL,
@@ -158,7 +174,7 @@ const createTransactionsTableQuery = `
 `;
 
 const createPartnerPaymentsTableQuery = `
-  CREATE TABLE IF NOT EXISTS PartnerPayments (
+  CREATE TABLE IF NOT EXISTS partnerPayments (
     id SERIAL PRIMARY KEY,
     partner_id INTEGER REFERENCES partners(id) ON DELETE CASCADE,
     amount_paid DECIMAL(10, 2) NOT NULL,
@@ -203,4 +219,5 @@ module.exports = {
     createTransactionsTableQuery,
     createPaymentsTableQuery,
     createUsersTableQuery,
+    createLocationsTableQuery,
   };
