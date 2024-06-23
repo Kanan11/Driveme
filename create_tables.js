@@ -41,15 +41,21 @@ const createPartnerTableQuery = `
   );
 `;
 
-const createPartnerBankTableQuery = `
+const createBankTableQuery = `
   CREATE TABLE IF NOT EXISTS Bank (
     id SERIAL PRIMARY KEY,
-    bank_name VARCHAR(255) NOT NULL,
-    bank_account_number VARCHAR(20),
-    bank_address VARCHAR(255),
-    bank_phone_number VARCHAR(20),
-    bank_email VARCHAR(255) UNIQUE,
-    meta_info TEXT
+    bank_type VARCHAR(20) NOT NULL, -- Type of bank (card or account)
+    bank_name VARCHAR(255) NOT NULL, -- Name of the bank
+    bank_account_clear_number VARCHAR(20), -- Clearing number for bank account
+    bank_account_number VARCHAR(20), -- Bank account number
+    bank_address VARCHAR(255), -- Address of the bank
+    bank_phone_number VARCHAR(20), -- Phone number of the bank
+    bank_email VARCHAR(255),
+    user_card_name VARCHAR(255), -- Name on the user's card
+    user_card_number VARCHAR(255), -- Card number
+    user_card_valid DATE, -- Expiry date of the card
+    user_card_cvc VARCHAR(20), -- CVC code of the card
+    meta_info TEXT -- Additional metadata information
   );
 `;
 
@@ -200,7 +206,7 @@ const getDriverOrderHistoryQuery = `
 
 
 const queries = [
-  createPartnerBankTableQuery,
+  createBankTableQuery,
   createPartnerAddressTableQuery,
   createPartnerDriversTableQuery,
   createPartnerCarsTableQuery,

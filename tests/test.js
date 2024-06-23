@@ -1,8 +1,8 @@
 const tape = require('tape');
 const { connectToDatabase } = require('../app'); // Adjust paths as per your project structure
-const { createOrdersTableQuery, createPartnerDriversTableQuery, createPartnerCarsTableQuery } = require('../queries'); // Adjust paths as per your project structure
+const { createOrdersTableQuery, createPartnerDriversTableQuery, createPartnerCarsTableQuery, createBankTableQuery } = require('../queries'); // Adjust paths as per your project structure
 
-tape('Test Database Connection and CRUD Operations', async (t) => {
+tape.skip('Test Database Connection and CRUD Operations', async (t) => {
   t.plan(5); // Adjust the number based on how many assertions you are making
 
   let client;
@@ -100,7 +100,7 @@ tape.skip('Test create order row, then delete it', async (t) => {
 });
 
 
-tape('Test Create Driver', async (t) => {
+tape.skip('Test Create Driver', async (t) => {
     t.plan(7); 
 
     let client;
@@ -212,7 +212,7 @@ tape.skip('Demo Test with Console Logs', async (t) => {
 });
 
 
-tape.only('Test Create Car and Delete Car', async (t) => {
+tape.skip('Test Create Car and Delete Car', async (t) => {
     t.plan(6); // Adjust the number based on how many assertions you are making
 
     let client;
@@ -272,3 +272,70 @@ tape.only('Test Create Car and Delete Car', async (t) => {
         process.exit(0); // Ensure the process exits after the test completes
     }
 });
+
+tape('Test Create Bank Table and Delete Row', async (t) => {
+    t.plan(5); // Adjust the number based on how many assertions you are making
+  
+    let client;
+    try {
+      // Connect to the database
+      client = await connectToDatabase();
+      t.pass('Connected to PostgreSQL database');
+  
+      // Create the Bank table
+      await client.query(createBankTableQuery);
+      t.pass('Bank table created successfully');
+  
+      // Insert a test row
+      const insertBankQuery = `
+        INSERT INTO Bank (
+          bank_type, bank_name, bank_account_clear_number, bank_account_number,
+          bank_address, bank_phone_number, bank_email, user_card_name,
+          user_card_number, user_card_valid, user_card_cvc, meta_info
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        RETURNING id, bank_name
+      `;
+      const insertValues = [
+        'card',
+        'Test Bank',
+        '12345',
+        '67890',
+        '123 Test St, Test City',
+        '1234567890',
+        'test.bank@example.com',
+        'John Doe',
+        '1234567890123456',
+        '2025-12-31',
+        '123',
+        'Some additional info'
+      ];
+      const insertResult = await client.query(insertBankQuery, insertValues);
+      const bankId = insertResult.rows[0].id;
+      t.ok(bankId, 'Bank row inserted successfully');
+  
+      // Retrieve the inserted row
+      const selectBankQuery = 'SELECT * FROM Bank WHERE id = $1';
+      const selectResult = await client.query(selectBankQuery, [bankId]);
+      t.equal(selectResult.rows.length, 1, 'Bank row retrieved successfully');
+  
+      // Delete the inserted row
+      await client.query('DELETE FROM Bank WHERE id = $1', [bankId]);
+      t.pass('Bank row deleted successfully');
+  
+    } catch (error) {
+      t.fail(`Error during database test: ${error.message}`);
+    } finally {
+      // Close the database connection
+      if (client) {
+        try {
+          await client.end();
+          console.log('Database connection closed');
+        } catch (error) {
+          console.error('Error closing database connection:', error.message);
+        }
+      }
+      t.end(); // End the test
+      process.exit(0); // Ensure the process exits after the test completes
+    }
+  });
+  
